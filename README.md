@@ -90,7 +90,9 @@ Once the application starts, you can view the interactive Swagger API documentat
 # 👨‍💻 Developer
 
 **Goutam Soni** - Java FullStack Developer
+
 **Lavkesh Khare** - Java Backend Developer
+
 ```
 Spring Boot | MySQL | JWT | REST API | Docker
 ```
