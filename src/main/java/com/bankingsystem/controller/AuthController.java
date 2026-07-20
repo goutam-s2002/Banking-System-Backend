@@ -88,7 +88,10 @@ public class AuthController {
         return ResponseEntity.ok(
                 new AuthResponse(
                         accessToken,
-                        refreshToken.getToken()
+                        refreshToken.getToken(),
+                        existingUser.getName(),
+                        existingUser.getEmail(),
+                        existingUser.getId()
                 )
         );
     }
@@ -110,7 +113,10 @@ public class AuthController {
         return ResponseEntity.ok(
                 new AuthResponse(
                         accessToken,
-                        refreshToken
+                        refreshToken,
+                        user.getName(),
+                        user.getEmail(),
+                        user.getId()
                 )
         );
     }
@@ -178,6 +184,20 @@ public class AuthController {
         log.info("Search User By Role API | role={}", role);
 
         return userService.searchUserByRole(role);
+    }
+
+    // Added: Get User By Email API (19-07-2026)
+    @GetMapping("/users/by-email")
+    public ResponseEntity<UserResponse> getUserByEmail(@RequestParam String email) {
+        log.info("Get User By Email API | email={}", email);
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+        UserResponse response = new UserResponse();
+        response.setId(user.getId());
+        response.setName(user.getName());
+        response.setEmail(user.getEmail());
+        response.setRole(user.getRole());
+        return ResponseEntity.ok(response);
     }
 
 }

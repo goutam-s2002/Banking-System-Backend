@@ -11,6 +11,8 @@ import com.bankingsystem.entity.User;
 import com.bankingsystem.repository.AccountRepository;
 import com.bankingsystem.repository.UserRepository;
 
+import java.util.List;
+
 import lombok.RequiredArgsConstructor;
 
 @Service
@@ -24,10 +26,42 @@ public class AccountService {
     private final UserRepository userRepository;
     private final AuditService auditService;
 
-    // Modified: Default Account Status ACTIVE (01-07-2026)
-    public AccountResponse createAccount(Long userId, String accountType) {
+    private AccountResponse mapToResponse(Account account) {
+        AccountResponse response = new AccountResponse();
+        response.setAccountId(account.getId());
+        response.setAccountNumber(account.getAccountNumber());
+        response.setAccountType(account.getAccountType());
+        response.setBalance(account.getBalance());
+        response.setOwnerName(account.getUser().getName());
+        response.setOwnerEmail(account.getUser().getEmail());
+        response.setStatus(account.getStatus() != null ? account.getStatus().toString() : null);
+        return response;
+    }
 
-        log.info("Create Account Request | userId={} accountType={}", userId, accountType);
+    public List<AccountResponse> getAccountsByEmail(String email) {
+        log.info("Fetching accounts for user email={}", email);
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+        return accountRepository.findByUser(user)
+                .stream()
+                .map(this::mapToResponse)
+                .toList();
+    }
+
+    public List<AccountResponse> getAccountsByUserId(Long userId) {
+        log.info("Fetching accounts for userId={}", userId);
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+        return accountRepository.findByUser(user)
+                .stream()
+                .map(this::mapToResponse)
+                .toList();
+    }
+
+    // Modified: Default Account Status ACTIVE (01-07-2026)
+    public AccountResponse createAccount(Long userId, String accountType, double initialBalance) {
+
+        log.info("Create Account Request | userId={} accountType={} initialBalance={}", userId, accountType, initialBalance);
 
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new RuntimeException("User not found"));
@@ -37,26 +71,19 @@ public class AccountService {
         Account account = new Account();
         account.setAccountNumber(generateAccountNumber());
         account.setAccountType(accountType);
-        account.setBalance(0.0);
+        account.setBalance(initialBalance);
         account.setStatus(AccountStatus.ACTIVE);   // New
         account.setUser(user);
 
         Account savedAccount = accountRepository.save(account);
-        auditService.saveLog(user.getEmail(), "ACCOUNT CREATED");
+        auditService.saveLog(user.getEmail(), "ACCOUNT CREATED WITH INITIAL BALANCE ₹" + initialBalance);
 
-        log.info("Account Created Successfully | AccountNo={} Status={}",
+        log.info("Account Created Successfully | AccountNo={} Status={} Balance={}",
                 savedAccount.getAccountNumber(),
-                savedAccount.getStatus());
+                savedAccount.getStatus(),
+                savedAccount.getBalance());
 
-        AccountResponse response = new AccountResponse();
-        response.setAccountId(savedAccount.getId());
-        response.setAccountNumber(savedAccount.getAccountNumber());
-        response.setAccountType(savedAccount.getAccountType());
-        response.setBalance(savedAccount.getBalance());
-        response.setOwnerName(user.getName());
-        response.setOwnerEmail(user.getEmail());
-
-        return response;
+        return mapToResponse(savedAccount);
     }
 
     private String generateAccountNumber() {
@@ -108,5 +135,13 @@ public class AccountService {
                 accountId, status);
 
         return "Account Status Updated Successfully";
+    }
+
+    public List<AccountResponse> getAllAccounts() {
+        log.info("Fetching all accounts in the system");
+        return accountRepository.findAll()
+                .stream()
+                .map(this::mapToResponse)
+                .toList();
     }
 }

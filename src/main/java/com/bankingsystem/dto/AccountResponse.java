@@ -12,6 +12,6 @@ public class AccountResponse {
 
     private String ownerName;
     private String ownerEmail;
-
+    private String status;
 
 }

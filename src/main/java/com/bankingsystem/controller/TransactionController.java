@@ -1,5 +1,6 @@
 package com.bankingsystem.controller;
 
+import java.security.Principal;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
@@ -25,51 +26,54 @@ public class TransactionController {
 
     @PostMapping("/deposit")
     public String deposit(@RequestParam Long accountId,
-                          @RequestParam double amount) {
+                          @RequestParam double amount,
+                          Principal principal) {
     	
     	System.out.println(">>> Deposit Controller Called");
 
-        return transactionService.deposit(accountId, amount);
+        return transactionService.deposit(accountId, amount, principal.getName());
     }
     
     @PostMapping("/withdraw")
     public String withdraw(@RequestParam Long accountId,
-                           @RequestParam double amount) {
+                           @RequestParam double amount,
+                           Principal principal) {
 
-        return transactionService.withdraw(accountId, amount);
+        return transactionService.withdraw(accountId, amount, principal.getName());
     }
     
     @PostMapping("/transfer")
     public String transfer(@RequestParam Long fromAccountId,
-                           @RequestParam Long toAccountId,
-                           @RequestParam double amount) {
+                           @RequestParam String toAccountNumber,
+                           @RequestParam double amount,
+                           Principal principal) {
     	System.out.println("Transfer API called");
 
-        return transactionService.transfer(fromAccountId, toAccountId, amount);
-        
-        
+        return transactionService.transfer(fromAccountId, toAccountNumber, amount, principal.getName());
     }
     
     @GetMapping("/history")
     public List<TransactionResponse> getHistory(
             @RequestParam Long accountId,
             @RequestParam int page,
-            @RequestParam int size) {
+            @RequestParam int size,
+            Principal principal) {
 
-        return transactionService.getHistory(accountId, page, size);
+        return transactionService.getHistory(accountId, page, size, principal.getName());
     }
     
     @GetMapping("/statement")
     public List<TransactionResponse> getStatement(
             @RequestParam Long accountId,
             @RequestParam String from,
-            @RequestParam String to) throws ParseException {
+            @RequestParam String to,
+            Principal principal) throws ParseException {
 
         SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
 
         Date fromDate = sdf.parse(from);
         Date toDate = sdf.parse(to);
 
-        return transactionService.getStatement(accountId, fromDate, toDate);
+        return transactionService.getStatement(accountId, fromDate, toDate, principal.getName());
     }
 }

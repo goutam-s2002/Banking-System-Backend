@@ -15,6 +15,8 @@ public interface AccountRepository extends JpaRepository<Account, Long> {
 
     Optional<Account> findByIdAndUser(Long accountId, User user);
 
+    Optional<Account> findByAccountNumber(String accountNumber);
+
     // Added: Dashboard Count APIs (01-07-2026)
     long countByStatus(AccountStatus status);
 

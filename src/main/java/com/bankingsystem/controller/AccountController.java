@@ -1,6 +1,7 @@
 package com.bankingsystem.controller;
 
 import java.security.Principal;
+import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -27,15 +28,31 @@ public class AccountController {
     @Autowired
     private AccountService accountService;
 
+    @GetMapping("/my")
+    public List<AccountResponse> getMyAccounts(Principal principal) {
+        return accountService.getAccountsByEmail(principal.getName());
+    }
+
+    @GetMapping("/user/{userId}")
+    public List<AccountResponse> getUserAccounts(@PathVariable Long userId) {
+        return accountService.getAccountsByUserId(userId);
+    }
+
+    @GetMapping("")
+    public List<AccountResponse> getAllAccounts() {
+        return accountService.getAllAccounts();
+    }
+
     @PostMapping("/create")
     public AccountResponse createAccount(
             @RequestParam Long userId,
-            @RequestParam String accountType) {
+            @RequestParam String accountType,
+            @RequestParam(defaultValue = "0.0") double initialBalance) {
 
 
         System.out.println("Controller userId = " + userId);
 
-        return accountService.createAccount(userId, accountType);
+        return accountService.createAccount(userId, accountType, initialBalance);
     }
 
     @GetMapping("/balance")

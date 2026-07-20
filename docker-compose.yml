@@ -1,0 +1,32 @@
+version: "3.8"
+
+services:
+
+  mysql-db:
+    image: mysql:8.0
+    container_name: mysql-db
+
+    restart: always
+
+    environment:
+      MYSQL_ROOT_PASSWORD: root123
+      MYSQL_DATABASE: banking_system_db
+
+    volumes:
+      - mysql-data:/var/lib/mysql
+
+  banking-app:
+    build: .
+
+    container_name: banking-app
+
+    restart: always
+
+    depends_on:
+      - mysql-db
+
+    ports:
+      - "8080:8080"
+
+volumes:
+  mysql-data:

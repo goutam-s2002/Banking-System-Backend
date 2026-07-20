@@ -7,120 +7,89 @@ A secure Banking Management System built using Spring Boot, Spring Security (JWT
 # 🚀 Features
 
 ## Authentication
-- User Registration
-- User Login
-- JWT Authentication
-- Refresh Token Authentication
+- User Registration & Login
+- JWT Authentication & Refresh Token Authentication
 - BCrypt Password Encryption
 
 ## User Management
-- Create User
-- Update User
-- Delete User
-- Get User By Id
-- Pagination
-- Search
-- Sorting
+- Create, Update, Delete Users, and Get User By ID
+- Pagination, Search, and Sorting support
 
 ## Account Management
-- Create Account
-- Delete Account
-- Account Status (ACTIVE / BLOCKED / CLOSED)
-- Balance Check
+- Create & Delete Accounts
+- Account Status tracking (ACTIVE / BLOCKED / CLOSED)
+- Balance check
 
 ## Transactions
-- Deposit
-- Withdraw
-- Transfer
-- Mini Statement
-- Bank Statement
+- Deposit, Withdraw, and Transfer between accounts
+- Mini Statement & Bank Statement generation
 
-## Security
-- Role Based Access (ADMIN / USER)
-- JWT Filter
-- Spring Security
-
-## Logging
-- SLF4J Logging
-- Audit Logging
+## Security & Architecture
+- Role-Based Access Control (ADMIN / USER)
+- Custom JWT Filters & Spring Security integration
+- SLF4J logging and Audit Logging
 
 ## Documentation
-- Swagger UI
+- Swagger UI (OpenAPI)
 
 ---
 
 # 🛠 Tech Stack
 
-- Java 21
-- Spring Boot 3
-- Spring Security
-- Spring Data JPA
-- Hibernate
-- MySQL
-- JWT
-- Lombok
-- Maven
-- Swagger (OpenAPI)
+- **Java Version:** Java 17 / 21
+- **Framework:** Spring Boot 3.2.5
+- **Database:** Aiven MySQL (Cloud Database)
+- **ORM:** Spring Data JPA / Hibernate
+- **Security:** Spring Security & JWT
+- **Build Tool:** Maven
+- **Containerization:** Docker (Multi-stage build)
 
 ---
 
 # 📂 Project Structure
 
-```
-controller
-service
-repository
-entity
-dto
-config
-exception
-util
-```
+- `config`: Security, JWT and Swagger configurations
+- `controller`: REST APIs entry points
+- `dto`: Request and Response Data Transfer Objects
+- `entity`: JPA entities mapping to database tables
+- `exception`: Global exception handler and custom exceptions
+- `repository`: Spring Data JPA repositories
+- `service`: Business logic layer
+- `util`: Utility helper classes
 
 ---
 
-# 🔐 Roles
 
-## ADMIN
+# 🏁 How to Run Locally
 
-- Manage Users
-- Create/Delete Accounts
-- View Audit Logs
+### Option A: Running with Maven
+1. Ensure Java 17+ is installed.
+2. Run the application using the Maven wrapper:
+   ```bash
+   ./mvnw spring-boot:run
+   ```
 
-## USER
-
-- Deposit
-- Withdraw
-- Transfer
-- View Balance
-- View Statements
-
----
-
-# 📖 API Modules
-
-- Authentication APIs
-- User APIs
-- Account APIs
-- Transaction APIs
-- Audit APIs
+### Option B: Running with Docker
+1. Build the Docker image:
+   ```bash
+   docker build -t banking-system .
+   ```
+2. Run the Docker container:
+   ```bash
+   docker run -p 8080:10000 -e PORT=10000 banking-system
+   ```
 
 ---
 
-# ⚙️ Future Enhancements
-
-- Docker Support
-- Live Deployment
-- Email Notification
-- Unit Testing
-- CI/CD Pipeline
+# 📖 API Documentation
+Once the application starts, you can view the interactive Swagger API documentation at:
+- **Local:** `http://localhost:8080/swagger-ui/index.html`
 
 ---
 
 # 👨‍💻 Developer
 
-Lavkesh Khare
-
-Java Backend Developer
-
-Spring Boot | MySQL | JWT | REST API
+**Lavkesh Khare** - Java Backend Developer
+```
+Spring Boot | MySQL | JWT | REST API | Docker
+```

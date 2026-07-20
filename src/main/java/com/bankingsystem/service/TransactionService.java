@@ -15,9 +15,12 @@ import com.bankingsystem.dto.TransactionResponse;
 import com.bankingsystem.entity.Account;
 import com.bankingsystem.entity.AccountStatus;
 import com.bankingsystem.entity.Transaction;
+import com.bankingsystem.entity.User;
+import com.bankingsystem.entity.Role;
 import com.bankingsystem.exception.AccountNotFoundException;
 import com.bankingsystem.repository.AccountRepository;
 import com.bankingsystem.repository.TransactionRepository;
+import com.bankingsystem.repository.UserRepository;
 
 import lombok.RequiredArgsConstructor;
 
@@ -30,15 +33,27 @@ public class TransactionService {
     private final AuditService auditService;
     private final TransactionRepository transactionRepository;
     private final AccountRepository accountRepository;
+    private final UserRepository userRepository;
+
+    private void validateOwnership(Account account, String email) {
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+        if (user.getRole() == Role.USER && !account.getUser().getId().equals(user.getId())) {
+            log.warn("Access Denied | User {} is not authorized to access Account ID {}", email, account.getId());
+            throw new RuntimeException("Unauthorized: You do not own this account");
+        }
+    }
 
     // Added: Deposit Logging (30-06-2026)
- // Modified: Deposit with Account Status Validation (01-07-2026)
-    public String deposit(Long accountId, double amount) {
+    // Modified: Deposit with Account Status Validation (01-07-2026)
+    public String deposit(Long accountId, double amount, String email) {
 
-        log.info("Deposit Request | AccountId={} Amount={}", accountId, amount);
+        log.info("Deposit Request | AccountId={} Amount={} User={}", accountId, amount, email);
 
         Account account = accountRepository.findById(accountId)
                 .orElseThrow(() -> new RuntimeException("Account not found"));
+
+        validateOwnership(account, email);
 
         // Added: Account Status Validation (01-07-2026)
         if (account.getStatus() != AccountStatus.ACTIVE) {
@@ -70,7 +85,7 @@ public class TransactionService {
         return "Deposit Successful";
     }
     
- // Added: Update Account Status (01-07-2026)
+    // Added: Update Account Status (01-07-2026)
     public String updateAccountStatus(Long accountId, AccountStatus status) {
         Account account = accountRepository.findById(accountId)
                 .orElseThrow(() -> new RuntimeException("Account not found"));
@@ -86,13 +101,15 @@ public class TransactionService {
     }
 
     // Added: Withdraw Logging (30-06-2026)
- // Modified: Withdraw with Account Status Validation (01-07-2026)
-    public String withdraw(Long accountId, double amount) {
+    // Modified: Withdraw with Account Status Validation (01-07-2026)
+    public String withdraw(Long accountId, double amount, String email) {
 
-        log.info("Withdraw Request | AccountId={} Amount={}", accountId, amount);
+        log.info("Withdraw Request | AccountId={} Amount={} User={}", accountId, amount, email);
 
         Account account = accountRepository.findById(accountId)
                 .orElseThrow(() -> new RuntimeException("Account not found"));
+
+        validateOwnership(account, email);
 
         // Added: Account Status Validation (01-07-2026)
         if (account.getStatus() != AccountStatus.ACTIVE) {
@@ -132,16 +149,18 @@ public class TransactionService {
     }
 
     // Added: Transfer Logging (30-06-2026)
- // Modified: Transfer with Account Status Validation (01-07-2026)
-    public String transfer(Long fromAccountId, Long toAccountId, double amount) {
+    // Modified: Transfer with Account Status Validation (01-07-2026)
+    public String transfer(Long fromAccountId, String toAccountNumber, double amount, String email) {
 
-        log.info("Transfer Request | From={} To={} Amount={}",
-                fromAccountId, toAccountId, amount);
+        log.info("Transfer Request | From={} ToAccountNumber={} Amount={} User={}",
+                fromAccountId, toAccountNumber, amount, email);
 
         Account from = accountRepository.findById(fromAccountId)
                 .orElseThrow(() -> new RuntimeException("Sender account not found"));
 
-        Account to = accountRepository.findById(toAccountId)
+        validateOwnership(from, email);
+
+        Account to = accountRepository.findByAccountNumber(toAccountNumber)
                 .orElseThrow(() -> new RuntimeException("Receiver account not found"));
 
         // Added: Sender Account Status Validation (01-07-2026)
@@ -180,7 +199,7 @@ public class TransactionService {
         txn.setAmount(amount);
         txn.setDate(new Date());
         txn.setFromAccountId(fromAccountId);
-        txn.setToAccountId(toAccountId);
+        txn.setToAccountId(to.getId());
 
         transactionRepository.save(txn);
         
@@ -189,20 +208,22 @@ public class TransactionService {
                 "TRANSFER ₹" + amount + " TO " + to.getAccountNumber());
 
         log.info("Transfer Successful | From={} To={} Amount={}",
-                fromAccountId, toAccountId, amount);
+                fromAccountId, to.getId(), amount);
 
         return "Transfer Successful";
     }
 
     // Added: Mini Statement Logging (30-06-2026)
-    public List<TransactionResponse> getHistory(Long accountId, int page, int size) {
+    public List<TransactionResponse> getHistory(Long accountId, int page, int size, String email) {
 
-        log.info("Mini Statement Request | AccountId={} Page={} Size={}",
-                accountId, page, size);
+        log.info("Mini Statement Request | AccountId={} Page={} Size={} User={}",
+                accountId, page, size, email);
 
-        accountRepository.findById(accountId)
+        Account account = accountRepository.findById(accountId)
                 .orElseThrow(() ->
                         new AccountNotFoundException("Account not found with id: " + accountId));
+
+        validateOwnership(account, email);
 
         Pageable pageable = PageRequest.of(page, size, Sort.by("date").descending());
 
@@ -239,14 +260,16 @@ public class TransactionService {
     }
 
     // Added: Bank Statement Logging (30-06-2026)
-    public List<TransactionResponse> getStatement(Long accountId, Date from, Date to) {
+    public List<TransactionResponse> getStatement(Long accountId, Date from, Date to, String email) {
 
-        log.info("Statement Request | AccountId={} From={} To={}",
-                accountId, from, to);
+        log.info("Statement Request | AccountId={} From={} To={} User={}",
+                accountId, from, to, email);
 
-        accountRepository.findById(accountId)
+        Account account = accountRepository.findById(accountId)
                 .orElseThrow(() ->
                         new AccountNotFoundException("Account not found with id: " + accountId));
+
+        validateOwnership(account, email);
 
         List<Transaction> transactions =
                 transactionRepository.findByFromAccountIdOrToAccountIdAndDateBetween(
