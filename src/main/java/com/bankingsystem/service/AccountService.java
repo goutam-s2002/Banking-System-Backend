@@ -10,8 +10,11 @@ import com.bankingsystem.entity.AccountStatus;
 import com.bankingsystem.entity.User;
 import com.bankingsystem.repository.AccountRepository;
 import com.bankingsystem.repository.UserRepository;
+import com.bankingsystem.repository.TransactionRepository;
+import com.bankingsystem.entity.Transaction;
 
 import java.util.List;
+import java.util.Date;
 
 import lombok.RequiredArgsConstructor;
 
@@ -25,6 +28,7 @@ public class AccountService {
     private final AccountRepository accountRepository;
     private final UserRepository userRepository;
     private final AuditService auditService;
+    private final TransactionRepository transactionRepository;
 
     private AccountResponse mapToResponse(Account account) {
         AccountResponse response = new AccountResponse();
@@ -76,6 +80,16 @@ public class AccountService {
         account.setUser(user);
 
         Account savedAccount = accountRepository.save(account);
+
+        if (initialBalance > 0) {
+            Transaction txn = new Transaction();
+            txn.setType("Account Opening Balance");
+            txn.setAmount(initialBalance);
+            txn.setDate(new Date());
+            txn.setToAccountId(savedAccount.getId());
+            transactionRepository.save(txn);
+        }
+
         auditService.saveLog(user.getEmail(), "ACCOUNT CREATED WITH INITIAL BALANCE ₹" + initialBalance);
 
         log.info("Account Created Successfully | AccountNo={} Status={} Balance={}",
